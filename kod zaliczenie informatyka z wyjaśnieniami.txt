@@ -1,0 +1,110 @@
+#include <stdio.h>
+#include <string.h>
+
+#define MAX 20 // Maksymalna liczba zadań
+
+// Definicja struktury opisującej zadanie
+typedef struct {
+    char opis[100];   // Opis zadania
+    int wykonane;     // 0 = nie, 1 = tak (czy zadanie wykonane)
+} Task;
+
+// Tablica zadań i licznik ile zadań obecnie istnieje
+Task tasks[MAX];
+int liczbaZadan = 0;
+
+// Funkcja: wczytajZadania
+// Wczytuje zadania z pliku tasks.txt do tablicy tasks[]
+void wczytajZadania() {
+    FILE *plik = fopen("tasks.txt", "r"); // otwarcie pliku do odczytu
+    if (plik == NULL) return; // jeśli plik nie istnieje, nic nie rób
+
+    // Wczytywanie zadań z pliku dopóki nie osiągniemy końca pliku lub MAX
+    while (fscanf(plik, " %[^\n] %d", tasks[liczbaZadan].opis, &tasks[liczbaZadan].wykonane) == 2) {
+        liczbaZadan++;
+        if (liczbaZadan >= MAX) break;
+    }
+
+    fclose(plik); // zamknięcie pliku
+}
+
+// Funkcja: Zapisz zadanie (Zapisuje wszystkie zadania do pliku tasks.txt)
+void zapiszZadania() {
+    FILE *plik = fopen("tasks.txt", "w"); // otwarcie pliku do zapisu
+    for (int i = 0; i < liczbaZadan; i++) {
+        // zapisujemy opis i status wykonania każdego zadania
+        fprintf(plik, "%s\n%d\n", tasks[i].opis, tasks[i].wykonane);
+    }
+    fclose(plik); // zamknięcie pliku
+}
+
+// Funkcja: dodajZadanie
+
+// Umożliwia użytkownikowi dodanie nowego zadania
+void dodajZadanie() {
+    if (liczbaZadan >= MAX) {
+        printf("Osiągnięto maksymalną liczbę zadań.\n");
+        return;
+    }
+
+    printf("Podaj opis zadania: ");
+    getchar(); // czyści bufor wejściowy po scanf
+    fgets(tasks[liczbaZadan].opis, sizeof(tasks[liczbaZadan].opis), stdin); // wczytanie opisu
+    tasks[liczbaZadan].opis[strcspn(tasks[liczbaZadan].opis, "\n")] = 0; // usunięcie znaku nowej linii
+    tasks[liczbaZadan].wykonane = 0; // nowo dodane zadanie jest niewykonane
+    liczbaZadan++; // zwiększamy licznik zadań
+}
+
+// Funkcja: pokazZadania
+
+// Wyświetla wszystkie zadania w liście
+void pokazZadania() {
+    for (int i = 0; i < liczbaZadan; i++) {
+        // [X] - wykonane, [ ] - niewykonane
+        printf("%d. [%c] %s\n", i + 1, tasks[i].wykonane ? 'X' : ' ', tasks[i].opis);
+    }
+}
+
+// Funkcja: oznaczJakoWykonane
+
+// Umożliwia użytkownikowi oznaczenie zadania jako wykonanego
+void oznaczJakoWykonane() {
+    int nr;
+    printf("Podaj numer zadania do oznaczenia jako wykonane: ");
+    scanf("%d", &nr); // pobranie numeru zadania od użytkownika
+    if (nr >= 1 && nr <= liczbaZadan) {
+        tasks[nr - 1].wykonane = 1; // oznaczenie jako wykonane
+    } else {
+        printf("Nieprawidłowy numer.\n");
+    }
+}
+
+// Funkcja: main
+
+// Główna pętla programu z menu
+int main() {
+    int wybor;
+
+    wczytajZadania(); // na start programu wczytujemy dane z pliku
+
+    do {
+        // Wyświetlenie menu
+        printf("\n1. Dodaj zadanie\n2. Pokaż zadania\n3. Oznacz jako wykonane\n0. Wyjście\nTwój wybór: ");
+        scanf("%d", &wybor); // pobranie wyboru użytkownika
+
+        // Obsługa wyboru
+        switch (wybor) {
+            case 1: dodajZadanie(); break;
+            case 2: pokazZadania(); break;
+            case 3: oznaczJakoWykonane(); break;
+            case 0:
+                zapiszZadania(); // przed zakończeniem zapisujemy dane do pliku
+                printf("Zapisano zadania.\n");
+                break;
+            default:
+                printf("Nieprawidłowy wybór.\n");
+        }
+    } while (wybor != 0); // dopóki użytkownik nie wybierze "0"
+
+    return 0;
+}
